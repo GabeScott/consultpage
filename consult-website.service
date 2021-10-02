@@ -1,0 +1,11 @@
+[Unit]
+Description=Consult Website
+
+[Service]
+ExecStart=/home/ec2-user/.nvm/versions/node/v16.10.0/bin/node server.js
+Restart=always
+
+WorkingDirectory=/home/ec2-user/
+
+[Install]
+WantedBy=multi-user.target

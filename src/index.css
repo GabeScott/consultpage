@@ -1,15 +1,31 @@
 .mainCard{
-  margin: 20px;
+  margin: 0px 20px;
   padding: 8px 30px;
   width: auto;
   box-shadow: 0px 3px 1px -2px rgb(0 0 0 / 20%), 0px 2px 2px 0px rgb(0 0 0 / 14%), 0px 1px 5px 0px rgb(0 0 0 / 12%);
 }
-.testdiv{
+.mc-side{
+  width:10%;
+  height:90%;
+  float:left;
+}
+.buttonrow{
   flex-direction: row;
   -webkit-box-pack: justify;
   justify-content: space-between;
   display: flex;
   padding: 20px 30px;
+}
+.br-side{
+  padding:0;
+  display: block;
+}
+.consultTypeRadio{
+  float: right;
+}
+.ct-side{
+  visibility: hidden;
+  display: none;
 }
 .newConsultButton{
   display: inline-flex;
@@ -40,11 +56,54 @@
   -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
 }
+.nc-side{
+  margin:0px 0px 10px 0px;
+  width:100%;
+}
+.newConsultButton:hover {
+  background-color: #4fafc5;
+}
+
+.newConsultButton:active {
+  background-color: #33707e;
+}
 .expander{
   margin: 0px 10px 0px 10px;
 }
 .searchBar{
   height: 30px;
+}
+.sb-side{
+  width:100%;
+  margin:0px 0px 10px 0px;
+}
+.newConsultPage{
+  display: none;
+  visibility: hidden;
+}
+.ncp-show{
+  height:90%;
+  display: block;
+  visibility: visible;
+  margin: 20px;
+  padding: 8px 30px;
+  box-shadow: 0px 3px 1px -2px rgb(0 0 0 / 20%), 0px 2px 2px 0px rgb(0 0 0 / 14%), 0px 1px 5px 0px rgb(0 0 0 / 12%);
+  overflow-y: scroll;
+}
+.exit{
+  float: right;
+  color: #5BC9E1;
+  cursor: pointer;
+}
+.tr-even{
+  background-color: #f1f1f1;
+}
+
+
+
+#root{
+  height: 100%;
+  position: absolute;
 }
 
 th{
@@ -60,8 +119,19 @@ table{
   width: 100%;
   border: 1px solid rgb(245, 245, 245);
   table-layout: fixed;
+  border-spacing: 0px;
 }
 thead{
   border: 1px solid rgb(232, 232, 232);
   background: rgba(19, 130, 202, 0.11);
+}
+body{
+  min-height:100%;
+}
+html{
+  height:100%;
+  overflow-y:hidden;
+}
+tbody tr:hover{
+  background-color: #dedede;
 }
