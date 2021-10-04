@@ -18,6 +18,7 @@ class App extends React.Component {
 			newConsultText:'New Consult',
 			shownConsultType:'open',
 			consults:[],
+			error:false,
 		}
 	}
 
@@ -29,14 +30,29 @@ class App extends React.Component {
 		};
 		fetch(apiUrl, requestOptions)
 			.then(response => response.json())
-			.then(data => this.setState({
-				consults:data,
-				shownConsultType:'open',
-			}));
+			.then(
+				(result) =>{
+					console.log(result)
+					this.setState({
+						consults:result,
+						shownConsultType:'open',
+						error:false,
+					})
+				},
+
+				(error) => {
+					if(!this.state.error)
+						window.alert("ERROR: Unable to retrieve consults from database.");
+					this.setState({
+						error:true,
+					})
+				});
+
 
 	}
 
 	getAllConsults(){
+
 		const requestOptions = {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -44,10 +60,22 @@ class App extends React.Component {
 		};
 		fetch(apiUrl, requestOptions)
 			.then(response => response.json())
-			.then(data => this.setState({
-				consults:data,
-				shownConsultType:'all',
-			}));
+			.then(
+				(result) =>{
+					this.setState({
+						consults:result,
+						shownConsultType:'all',
+						error:false,
+					})
+				},
+
+				(error) => {
+					if(!this.state.error)
+						window.alert("ERROR: Unable to retrieve consults from database.");
+					this.setState({
+						error:true,
+					})
+				});
 	}
 
 	async newConsult(){
@@ -58,24 +86,33 @@ class App extends React.Component {
 			body: JSON.stringify({ action: 'createEmptyConsult', time_created:current_time })
 		};
 		await fetch(apiUrl, requestOptions)
-			.then(response => console.log(response));
-		
+			.then(
+				(result) => {
+					console.log(result);
+					this.setState({
+						newConsult:true,
+						displayConsultCard:'mainCard mc-side',
+						newConsultPageClass:'newConsultPage ncp-show',
+						buttonRowClass:'buttonrow br-side',
+						newConsultButtonClass:'newConsultButton nc-side',
+						consultTypeRadio:'consultTypeRadio ct-side',
+						searchBarClass:'searchBar sb-side',
+						newConsultText:'New +',
+						time_created:current_time,
+						consultToShow:{time_created:current_time},
+						error:false,
+					})
+					this.getOpenConsults();
+				},
 
-		this.setState({
-			newConsult:true,
-			displayConsultCard:'mainCard mc-side',
-			newConsultPageClass:'newConsultPage ncp-show',
-			buttonRowClass:'buttonrow br-side',
-			newConsultButtonClass:'newConsultButton nc-side',
-			consultTypeRadio:'consultTypeRadio ct-side',
-			searchBarClass:'searchBar sb-side',
-			newConsultText:'New +',
-			time_created:current_time,
-			consultToShow:{time_created:current_time},
-		})
-
-		this.getOpenConsults();
-
+				(error) => {
+					if(!this.state.error)
+						window.alert("ERROR: Unable to create consult in database.");
+						console.log(error)
+					this.setState({
+						error:true,
+					})
+				});
 	}
 
 	openExistingConsult(data){
@@ -113,19 +150,69 @@ class App extends React.Component {
 
 	async updateConsult(data){
 		var consult = {};
-		for (let [key, prop] of Object.entries(this.state.consultToShow)) {
+		for (let [key] of Object.entries(this.state.consultToShow)) {
 		  	consult[key] = this.state.consultToShow[key];
 		}
 
-		for (let [key, prop] of Object.entries(data)) {
+		for (let [key] of Object.entries(data)) {
 		  	consult[key] = data[key];
 		}
+
+		consult.action = 'updateConsult';
 
 		this.setState({
 			consultToShow:consult,
 		})
 
-		consult.action = 'updateConsult';
+		const requestOptions = {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(consult)
+		};
+
+
+		await fetch(apiUrl, requestOptions)
+			.then(
+				(result) =>{
+					console.log(result);
+					this.setState({
+						error:false,
+						lastUpdatedConsult:consult,
+					})
+
+				},
+
+				(error) => {
+					if(!this.state.error){
+						window.alert("ERROR: Unable to update consult in database");
+					}
+					this.setState({
+						consultToShow:this.state.lastUpdatedConsult,
+						error:true,
+					})
+				});
+
+		this.getOpenConsults();
+	}
+
+
+
+	async closeConsult(data){
+		const previousData = this.state.consultToShow;
+
+		if(!window.confirm("Are you sure you want to close this consult? This cannot be undone."))
+			return;
+
+		var consult = {};
+		for (let [key] of Object.entries(this.state.consultToShow)) {
+		  	consult[key] = this.state.consultToShow[key];
+		}
+
+		for (let [key] of Object.entries(data)) {
+		  	consult[key] = data[key];
+		}
+
+		consult.action = 'closeConsult';
 
 		const requestOptions = {
 			method: 'POST',
@@ -133,16 +220,36 @@ class App extends React.Component {
 			body: JSON.stringify(consult)
 		};
 		await fetch(apiUrl, requestOptions)
-			.then(response => console.log(response));
+			.then(
+				(result) =>{
+					console.log(result);
+					this.setState({
+						consultToShow:consult,
+						error:false
+					})
+					this.getOpenConsults();
+					this.exitNewConsult();
+				},
 
-		this.getOpenConsults();
+				(error) => {
+					if(!this.state.error)
+						window.alert("ERROR: Unable to close consult in database");
+					this.setState({
+						consultToShow:previousData,
+						error:true
+					})
+				});
 	}
 
 
 
 	render() {
 		return (
+			<>
+			<title>Consult Webpage</title>
+
 			<div style={{width:'100%', height:'100%'}}>
+			<div>{this.state.error ? "ERROR" : ""}</div>
 				<DisplayConsultCard 
 					onClick={()=>this.newConsult()} 
 					className={this.state.displayConsultCard}
@@ -156,6 +263,7 @@ class App extends React.Component {
 					consultTypeRadio={this.state.consultTypeRadio}	
 					onAllClick={()=>this.getAllConsults()}
 					onOpenClick={()=>this.getOpenConsults()}	
+
 					consults={this.state.consults}
 					shownConsultType={this.state.shownConsultType}
 				/>
@@ -165,8 +273,10 @@ class App extends React.Component {
 					time_created={this.state.time_created}
 					consultToShow={this.state.consultToShow}
 					updateConsult={(data)=>this.updateConsult(data)}
+					onSubmitClick={(data)=>this.closeConsult(data)}
 				/>
 			</div>
+			</>
 
 
 		);
@@ -182,6 +292,7 @@ class NewConsultCard extends React.Component{
 					onExit={this.props.onExit} 
 					consultToShow={this.props.consultToShow}
 					updateConsult={this.props.updateConsult}
+					onSubmitClick={this.props.onSubmitClick}
 				/>
 			</div>
 		)
@@ -202,16 +313,11 @@ class ConsultPage extends React.Component{
 			time_created:'',
 			patient_location:'',
 			date_of_birth:'',
-			gende:'',
+			gender:'',
 			camera_name:'',
 			notes:'',
 			default:false,
 		}
-	}
-
-	sendRequest(){
-		console.log(this.state);
-		console.log("Request sent");
 	}
 
 	getAge(){
@@ -305,6 +411,7 @@ class ConsultPage extends React.Component{
 				Facility
 				<br/>
 				<select name="facility" id="facility" onChange={(e)=>this.props.updateConsult({facility:e.target.value})} value={consult.facility}>
+				<option value="">Select an Option</option>
 				<option value="Facility1">Facility1</option>
 				<option value="Facility2">Facility2</option>
 				<option value="Facility3">Facility3</option>
@@ -332,7 +439,7 @@ class ConsultPage extends React.Component{
 				<textarea onChange={(e)=>this.props.updateConsult({notes:e.target.value})} value={consult.notes}></textarea>
 
 				<br/><br/><br/>
-				<button onClick={()=>this.sendRequest()}>Submit</button>
+				<button onClick={()=>this.props.onSubmitClick(consult)}>Submit</button>
 
 
 			</div>
@@ -438,8 +545,8 @@ class ConsultRow extends React.Component{
 		return (
 			<tr 
 				key={this.state.data} 
-				className={this.props.index % 2 == 0 ? 'tr-even' : 'tr-odd'}
-				onClick={()=>{this.state.data.open === 'true' ? this.props.onClick(this.state.data) : console.log('Cannot open closed consult.')}}>
+				className={this.props.index % 2 === 0 ? 'tr-even' : 'tr-odd'}
+				onClick={()=>{this.state.data.open === 'true' ? this.props.onClick(this.state.data) : window.alert('Cannot open closed consult.')}}>
 				{Object.keys(this.state.data).slice(0, length).map(
 					(key) => 
 						<td 
