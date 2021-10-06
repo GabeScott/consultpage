@@ -16,10 +16,47 @@ function getPool(){
   return pool;
 }
 
+function generateUpdateSQL(consult){
+  var consult_temp = {...consult};
+  delete consult_temp['time_created'];
+  delete consult_temp['open']
+  delete consult_temp['action']
+
+  var values = [];
+
+  var sql = 'UPDATE consults SET ';
+  const keys = Object.keys(consult_temp);
+
+  if(keys.length > 1){
+    sql += '('
+    keys.slice(0,-1).forEach(key => sql+=key+',')
+  }
+  sql += keys[keys.length-1];
+
+  
+
+  var index = 1;
+  if(keys.length > 1){
+    sql += ') = ('
+    keys.slice(0,-1).forEach(key => sql+='$'+(index++)+',')
+  } else {
+    sql += '='
+  }
+  sql+='$' + (index++)+' '
+
+  if(keys.length > 1){
+    sql += ') '
+  }
+
+  keys.slice().forEach(key=>values.push(consult_temp[key] || null))
+
+  return [sql, values];
+}
+
 async function getAllConsults(){
   const pool = getPool();
 
-  let retval = await pool.query("SELECT facility, first_name, last_name, consult_type, call_back_phone, referring_provider, time_created, patient_location, date_of_birth, gender, camera_name, notes, open FROM consults ORDER BY time_created;")
+  let retval = await pool.query("SELECT * FROM consults ORDER BY time_created;")
   await pool.end();
 
   return retval.rows;
@@ -28,7 +65,7 @@ async function getAllConsults(){
 async function getAllOpenConsults(){
   const pool = getPool();
 
-  let retval = await pool.query("SELECT facility, first_name, last_name, consult_type, call_back_phone, referring_provider, time_created, patient_location, date_of_birth, gender, camera_name, notes, open FROM consults WHERE open='true' ORDER BY time_created;")
+  let retval = await pool.query("SELECT * FROM consults WHERE open='true' ORDER BY time_created;")
   await pool.end();
 
   return retval.rows;
@@ -36,60 +73,35 @@ async function getAllOpenConsults(){
 
 async function createEmptyConsult(time_created){
   const pool = getPool();
+  var now = new Date().toISOString();
 
-  let retval = await pool.query(`INSERT INTO consults (time_created, open) VALUES ($1, 'true');`, [time_created])
+  let retval = await pool.query(`INSERT INTO consults (time_created, consult_time, nihss_time, open) VALUES ($1, $2, $3, 'true');`, [time_created, now, now])
   await pool.end();
   return "New Consult Successfully Inserted";
 }
 
 async function updateConsult(request){
+
   const pool = getPool();
 
-  const f   = request.facility || '';
-  const ln  = request.last_name || '';
-  const fn  = request.first_name || '';
-  const ct  = request.consult_type || '';
-  const cbp = request.call_back_phone || '';
-  const rp  = request.referring_provider || '';
-  const tc  = request.time_created || '';
-  const pl  = request.patient_location || '';
-  const db  = request.date_of_birth || null;
-  const g   = request.gender || '';
-  const cn  = request.camera_name || '';
-  const n   = request.notes || '';
+  var [sql, values] = generateUpdateSQL(request);
+  sql += 'WHERE time_created= $'+(values.length+1)+';';
+  values.push(request.time_created);
 
+  console.log(sql);
 
-  var query = "UPDATE consults SET (facility, first_name, last_name, consult_type, call_back_phone, referring_provider, patient_location, date_of_birth, gender, camera_name, notes)"
-  query += ` = ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) WHERE time_created= $12;`
-
-
-  let retval = await pool.query(query, [f,fn,ln,ct,cbp,rp,pl,db,g,cn,n,tc]);
+  let retval = await pool.query(sql, values);
   await pool.end();
   return "Consult Successfully Updated";
 }
 
 async function closeConsult(request){
   const pool = getPool();
-
-  const f   = request.facility || '';
-  const ln  = request.last_name || '';
-  const fn  = request.first_name || '';
-  const ct  = request.consult_type || '';
-  const cbp = request.call_back_phone || '';
-  const rp  = request.referring_provider || '';
   const tc  = request.time_created || '';
-  const pl  = request.patient_location || '';
-  const db  = request.date_of_birth || null;
-  const g   = request.gender || '';
-  const cn  = request.camera_name || '';
-  const n   = request.notes || '';
 
+  const query = "UPDATE consults SET open='false' WHERE time_created= $1;"
 
-  var query = "UPDATE consults SET (facility, first_name, last_name, consult_type, call_back_phone, referring_provider, patient_location, date_of_birth, gender, camera_name, notes, open)"
-  query += ` = ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11, 'false') WHERE time_created= $12;`
-
-
-  let retval = await pool.query(query, [f,fn,ln,ct,cbp,rp,pl,db,g,cn,n,tc]);
+  let retval = await pool.query(query, [tc]);
   await pool.end();
   return "Consult Successfully Closed";
 }
@@ -125,7 +137,6 @@ app.post('/api', async function(req, res){
       retval = "Action not understood";
     }
 
-    console.log(retval);
     res.end(JSON.stringify(retval));
   });
 

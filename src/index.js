@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDom from 'react-dom';
 import './index.css';
+import DemographicsTab from './DemographicsTab.jsx'
+import ScoresTab from './ScoresTab.jsx'
 
 const apiUrl = 'http://'+window.location.hostname+'/api';
 
@@ -130,8 +132,6 @@ class App extends React.Component {
 		this.setState({
 			consultToShow:data,
 		})
-
-
 	}
 
 	exitNewConsult(){
@@ -194,7 +194,6 @@ class App extends React.Component {
 
 		this.getOpenConsults();
 	}
-
 
 
 	async closeConsult(data){
@@ -304,152 +303,49 @@ class ConsultPage extends React.Component{
 		super(props);
 
 		this.state = {
-			facility:'',
-			first_name:'',
-			last_name:'',
-			consultType:'',
-			call_back_phone:'',
-			referring_provider:'',
-			time_created:'',
-			patient_location:'',
-			date_of_birth:'',
-			gender:'',
-			camera_name:'',
-			notes:'',
 			default:false,
+			selected:'demo',
 		}
-	}
-
-	getAge(){
-		if(!this.props.consultToShow || !this.props.consultToShow.date_of_birth)
-			return '';
-
-		const today = new Date();
-		const dob = new Date(this.props.consultToShow.date_of_birth.substring(0,10))
-		var age = today.getFullYear() - dob.getFullYear();
-		var m = today.getMonth() - dob.getMonth();
-
-		if(m < 0 || (m === 0 && today.getDate() < dob.getDate()))
-			age--;
-
-		return age;
 	}
 
 	render() {
-
-		var consult = {
-				facility:'',
-				first_name:'',
-				last_name:'',
-				consult_type:'',
-				call_back_phone:'',
-				referring_provider:'',
-				time_created:'',
-				patient_location:'',
-				date_of_birth:'',
-				gender:'',
-				camera_name:'',
-				notes:'',
-			};
-		if(this.props.consultToShow){
-			consult = {
-				facility:this.props.consultToShow.facility || '',
-				first_name:this.props.consultToShow.first_name || '',
-				last_name:this.props.consultToShow.last_name || '',
-				consult_type:this.props.consultToShow.consult_type || '',
-				call_back_phone:this.props.consultToShow.call_back_phone || '',
-				referring_provider:this.props.consultToShow.referring_provider || '',
-				time_created:this.props.consultToShow.time_created || '',
-				patient_location:this.props.consultToShow.patient_location || '',
-				date_of_birth:this.props.consultToShow.date_of_birth || '',
-				gender:this.props.consultToShow.gender || '',
-				camera_name:this.props.consultToShow.camera_name || '',
-				notes:this.props.consultToShow.notes || '',
-			}
-		}
-
+  		var consult;
+  		if(!this.props.consultToShow)
+  			consult = {};
+  		else
+  			consult = {...this.props.consultToShow};
 
 		return (
 			<div>
-				<div className='exit' onClick={()=>this.props.onExit()}>X</div>
-				<h3>Consult Type*</h3>
-				<input type="radio" id="asl1" name='contype' value="asl1" onChange={(e)=>this.props.updateConsult({consult_type:e.target.value})} checked={consult.consult_type === 'asl1'}></input>
-				<label htmlFor="asl1">Acute Stroke Level 1 (0-4.5 hrs)</label>
-				<input type="radio" id="asl2" name='contype' value="asl2" onChange={(e)=>this.props.updateConsult({consult_type:e.target.value})} checked={consult.consult_type === 'asl2'}></input>
-				<label htmlFor="asl2">Acute Stroke Level 2 (4.5-24 hrs)</label>
-				<input type="radio" id="gn" name='contype' value="gn" onChange={(e)=>this.props.updateConsult({consult_type:e.target.value})} checked={consult.consult_type === 'gn'}></input>
-				<label htmlFor="gn">General Neurology</label>
-				<input type="radio" id="fu" name='contype'value="fu" onChange={(e)=>this.props.updateConsult({consult_type:e.target.value})} checked={consult.consult_type === 'fu'}></input>
-				<label htmlFor="fu">Follow-Up Phone Call</label>
+				<div className="tab">
+					<button className={this.state.selected === 'demo' ? 'active' : ''} onClick={()=>this.setState({selected:'demo'})}>Demographics</button>
+					<button className={this.state.selected === 'scores' ? 'active' : ''} onClick={()=>this.setState({selected:'scores'})}>NIHSS</button>
+					<div className='exit' onClick={()=>this.props.onExit()}>X</div>
+				</div>
 
-				<h3>Patient Location*</h3>
-				<input type="radio" id="er" name='patloc' value="er" onChange={(e)=>this.props.updateConsult({patient_location:e.target.value})} checked={consult.patient_location === 'er'}></input>
-				<label htmlFor="er">Emergency Room</label>
-				<input type="radio" id="ip" name='patloc' value="ip" onChange={(e)=>this.props.updateConsult({patient_location:e.target.value})} checked={consult.patient_location === 'ip'}></input>
-				<label htmlFor="ip">Inpatient</label>
+				<DemographicsTab 
+					consult={consult}
+					updateConsult={this.props.updateConsult}
+					onSubmitClick={this.props.onSubmitClick}
+					selected={this.state.selected === 'demo'}
+				/>
 
-				<h3>First Name*</h3>
-				<input type='text' onChange={(e)=>this.props.updateConsult({first_name:e.target.value})} value={consult.first_name}></input>
-
-				<h3>Last Name*</h3>
-				<input type='text' onChange={(e)=>this.props.updateConsult({last_name:e.target.value})} value={consult.last_name}></input>
-				<br/><br/><br/>
-
-				Date of Birth: <input type='date' onChange={(e)=>this.props.updateConsult({date_of_birth:e.target.value})} value={consult.date_of_birth.substring(0,10) }></input>
-				<br/><br/>
-				Age: <input type='text' readOnly value={this.getAge()}></input>
-
-				<h3>Gender</h3>
-				<input type="radio" id="m" name='gender' value="m" onChange={(e)=>this.props.updateConsult({gender:e.target.value})} checked={consult.gender === 'm'}></input>
-				<label htmlFor="m">Male</label>
-				<input type="radio" id="f" name='gender' value="f" onChange={(e)=>this.props.updateConsult({gender:e.target.value})} checked={consult.gender === 'f'}></input>
-				<label htmlFor="f">Female</label>
-				<input type="radio" id="nb" name='gender' value="nb" onChange={(e)=>this.props.updateConsult({gender:e.target.value})} checked={consult.gender === 'nb'}></input>
-				<label htmlFor="nb">Non-binary</label>
-
-				<br/><br/><br/>
-				Facility
-				<br/>
-				<select name="facility" id="facility" onChange={(e)=>this.props.updateConsult({facility:e.target.value})} value={consult.facility}>
-				<option value="">Select an Option</option>
-				<option value="Facility1">Facility1</option>
-				<option value="Facility2">Facility2</option>
-				<option value="Facility3">Facility3</option>
-				<option value="Facility4">Facility4</option>
-				</select>
-
-				<br/><br/><br/>
-				Referring Provider
-				<br/>
-				<input type='text' onChange={(e)=>this.props.updateConsult({referring_provider:e.target.value})} value={consult.referring_provider}></input>
-
-				<br/><br/><br/>
-				Call Back Phone
-				<br/>
-				<input type='text' onChange={(e)=>this.props.updateConsult({call_back_phone:e.target.value})} value={consult.call_back_phone}></input>
-
-				<br/><br/><br/>
-				Camera Name
-				<br/>
-				<input type='text' onChange={(e)=>this.props.updateConsult({camera_name:e.target.value})} value={consult.camera_name}></input>
-
-				<br/><br/><br/>
-				Notes
-				<br/>
-				<textarea onChange={(e)=>this.props.updateConsult({notes:e.target.value})} value={consult.notes}></textarea>
-
-				<br/><br/><br/>
-				<button onClick={()=>this.props.onSubmitClick(consult)}>Submit</button>
-
-
+				<ScoresTab 
+					consult={consult}
+					updateConsult={this.props.updateConsult}
+					onSubmitClick={this.props.onSubmitClick}
+					selected={this.state.selected === 'scores'}
+				/>				
 			</div>
 		)
 	}
 }
 
+
+
+
+
 class DisplayConsultCard extends React.Component {
-
-
 
 	constructor(props){
 		super(props);
@@ -457,6 +353,7 @@ class DisplayConsultCard extends React.Component {
 		this.state = {
 			consults:[],
 			heading:['Facility', 'First Name', 'Last Name', 'Type', 'Phone', 'Provider', 'Created On'],
+			headingKeys:['facility', 'first_name', 'last_name', 'consult_type', 'call_back_phone', 'referring_provider', 'time_created'],
 		};
 	}
 
@@ -479,6 +376,7 @@ class DisplayConsultCard extends React.Component {
 
 				<Table 
 					heading={this.props.newConsult ? this.state.heading.slice(0,1) : this.state.heading} 
+					headingKeys={this.state.headingKeys}
 					consults={this.props.consults} 
 					newConsult={this.props.newConsult}
 					onClickExistingConsult={(e)=>{this.props.onOpenClick(); this.props.onClickExistingConsult(e);}}
@@ -526,6 +424,7 @@ class OpenConsults extends React.Component {
 						onClick={this.props.onClickExistingConsult}
 						newConsult={this.props.newConsult}
 						index={index++}
+						headingKeys={this.props.headingKeys}
 					/>									
 				)
 		);
@@ -547,7 +446,7 @@ class ConsultRow extends React.Component{
 				key={this.state.data} 
 				className={this.props.index % 2 === 0 ? 'tr-even' : 'tr-odd'}
 				onClick={()=>{this.state.data.open === 'true' ? this.props.onClick(this.state.data) : window.alert('Cannot open closed consult.')}}>
-				{Object.keys(this.state.data).slice(0, length).map(
+				{this.props.headingKeys.slice(0, length).map(
 					(key) => 
 						<td 
 							key={Math.random()}
@@ -574,6 +473,7 @@ class Table extends React.Component {
 						consults={this.props.consults} 
 						newConsult={this.props.newConsult}
 						onClickExistingConsult={this.props.onClickExistingConsult}
+						headingKeys={this.props.headingKeys}
 					/>
 				</tbody>
 			</table>
