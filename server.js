@@ -75,9 +75,9 @@ async function createEmptyConsult(time_created){
   const pool = getPool();
   var now = new Date().toISOString();
 
-  let retval = await pool.query(`INSERT INTO consults (time_created, consult_time, nihss_time, open) VALUES ($1, $2, $3, 'true');`, [time_created, now, now])
+  let retval = await pool.query(`INSERT INTO consults (time_created, consult_time, nihss_time) VALUES ($1, $2, $3) RETURNING *;`, [time_created, now, now])
   await pool.end();
-  return "New Consult Successfully Inserted";
+  return retval.rows[0];
 }
 
 async function updateConsult(request){

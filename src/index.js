@@ -88,9 +88,9 @@ class App extends React.Component {
 			body: JSON.stringify({ action: 'createEmptyConsult', time_created:current_time })
 		};
 		await fetch(apiUrl, requestOptions)
+			.then(response => response.json())
 			.then(
 				(result) => {
-					console.log(result);
 					this.setState({
 						newConsult:true,
 						displayConsultCard:'mainCard mc-side',
@@ -101,7 +101,7 @@ class App extends React.Component {
 						searchBarClass:'searchBar sb-side',
 						newConsultText:'New +',
 						time_created:current_time,
-						consultToShow:{time_created:current_time},
+						consultToShow:result,
 						error:false,
 					})
 					this.getOpenConsults();
