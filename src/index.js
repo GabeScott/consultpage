@@ -3,6 +3,8 @@ import ReactDom from 'react-dom';
 import './index.css';
 import DemographicsTab from './DemographicsTab.jsx'
 import ScoresTab from './ScoresTab.jsx'
+import HPITab from './HPITab.jsx'
+import AssessmentTab from './AssessmentTab.jsx'
 
 const apiUrl = 'http://'+window.location.hostname+'/api';
 
@@ -246,7 +248,8 @@ class App extends React.Component {
 		return (
 			<>
 			<title>Consult Webpage</title>
-
+			<a href='/logout' style={{'float':'right', 'margin-right':'20px'}}>Logout</a>
+			<br/><br/>
 			<div style={{width:'100%', height:'100%'}}>
 			<div>{this.state.error ? "ERROR" : ""}</div>
 				<DisplayConsultCard 
@@ -319,8 +322,10 @@ class ConsultPage extends React.Component{
 			<div>
 				<div className="tab">
 					<button className={this.state.selected === 'demo' ? 'active' : ''} onClick={()=>this.setState({selected:'demo'})}>Demographics</button>
+					<button className={this.state.selected === 'hpi' ? 'active' : ''} onClick={()=>this.setState({selected:'hpi'})}>HPI</button>
 					<button className={this.state.selected === 'scores' ? 'active' : ''} onClick={()=>this.setState({selected:'scores'})}>NIHSS</button>
-					<div className='exit' onClick={()=>this.props.onExit()}>X</div>
+					<button className={this.state.selected === 'assess' ? 'active' : ''} onClick={()=>this.setState({selected:'assess'})}>Assessment</button>
+					<div className='exit' onClick={()=>{this.setState({selected:'demo'}); this.props.onExit()}}>X</div>
 				</div>
 
 				<DemographicsTab 
@@ -330,12 +335,26 @@ class ConsultPage extends React.Component{
 					selected={this.state.selected === 'demo'}
 				/>
 
+				<HPITab 
+					consult={consult}
+					updateConsult={this.props.updateConsult}
+					onSubmitClick={this.props.onSubmitClick}
+					selected={this.state.selected === 'hpi'}
+				/>
+
 				<ScoresTab 
 					consult={consult}
 					updateConsult={this.props.updateConsult}
 					onSubmitClick={this.props.onSubmitClick}
 					selected={this.state.selected === 'scores'}
-				/>				
+				/>	
+
+				<AssessmentTab 
+					consult={consult}
+					updateConsult={this.props.updateConsult}
+					onSubmitClick={this.props.onSubmitClick}
+					selected={this.state.selected === 'assess'}
+				/>			
 			</div>
 		)
 	}

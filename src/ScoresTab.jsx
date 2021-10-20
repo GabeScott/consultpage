@@ -7,6 +7,17 @@ class ScoresTab extends React.Component {
   		return ('000'+now.getFullYear()).slice(-4) + '-' + ('0'+(now.getMonth()+1)).slice(-2) + '-' + ('0'+now.getDate()).slice(-2) + 'T'+ ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2);
 	}
 
+	getNihssTotal(consult){
+		const keysToAdd = ['loc', 'loc_questions', 'loc_commands', 'best_gaze', 'visual', 'facial_palsy', 'motor_arm_left', 
+							'motor_arm_right', 'motor_leg_left', 'motor_leg_right', 'limb_ataxia', 'sensory', 'best_language', 'dysarthria', 'extinction_inattention']
+		var total = 0;
+
+		keysToAdd.forEach(key => total += consult[key] == 'UN' ? 0 : parseInt(consult[key]));
+
+		return total;
+
+	}
+
 	render(){
 		var classname = this.props.selected ? 'visible' : 'hidden';
 		const consult = this.props.consult;
@@ -206,7 +217,7 @@ class ScoresTab extends React.Component {
 				<br /><br />
 
 				<label htmlFor="nihsstotal">NIHSS Total:&nbsp;&nbsp;&nbsp;</label>
-				<input type="text" id="nihsstotal" onChange={(e)=>this.props.updateConsult({nihss_time:e.target.value})} readOnly></input>
+				<input type="text" id="nihsstotal" value={this.getNihssTotal(consult)} readOnly></input>
 				
 			</div>
 		)

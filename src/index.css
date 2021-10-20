@@ -27,6 +27,14 @@
   visibility: hidden;
   display: none;
 }
+.hpi-ta{
+  width: 50%;
+  height: 50px;
+}
+.assess-ta{
+  width: 100%;
+  height: 100px;
+}
 .newConsultButton{
   display: inline-flex;
   color: #fff;

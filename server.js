@@ -2,6 +2,18 @@ const proxy = require('express-http-proxy');
 const express = require('express');
 const cors = require('cors');
 const app = express(); 
+const bodyParser = require('body-parser'); // Middleware 
+const bcrypt = require("bcrypt");
+const session = require('express-session');
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(session({
+  secret: 'secret',
+  resave: true,
+  saveUninitialized: true
+}));
+
+
 
 const { Pool, Client } = require('pg')
 
@@ -106,6 +118,16 @@ async function closeConsult(request){
   return "Consult Successfully Closed";
 }
 
+async function checkUser(username, password){
+  const pool = getPool();
+
+  const query = "SELECT password_hash FROM users WHERE username= $1;"
+
+  let retval = await pool.query(query, [username]);
+  await pool.end();
+  return await bcrypt.compare(password, retval.rows[0].password_hash);
+}
+
 app.use(cors());
 
 app.post('/api', async function(req, res){
@@ -141,6 +163,44 @@ app.post('/api', async function(req, res){
   });
 
 });
-app.use(express.static('./consultpage/build/'));
+
+
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/consultpage/public/login.html');
+});
+
+// app.get('/home', (req, res) => {
+//   res.sendFile(__dirname + '/consultpage/build/index.html');
+// });
+
+app.post('/login', async function(req, res){
+    const username = req.body.username;
+    const password = req.body.password;
+
+    if(await checkUser(username, password)){
+        req.session.loggedin = true;
+        res.redirect('/home');
+    }
+    else{
+        res.send("ERROR: Username/password incorrect");
+    }
+});
+ 
+app.get('/home', function(req, res) {
+    if(req.session.loggedin){
+        res.sendFile(__dirname + '/consultpage/build/index.html');
+    }
+    else {
+        res.send("Please log in first");
+    }
+});
+
+app.get('/logout', function(req, res) {
+    req.session.destroy();
+    res.redirect('/');
+});
+
+app.use(express.static('./consultpage/build/'))
+
 app.listen(80);
 

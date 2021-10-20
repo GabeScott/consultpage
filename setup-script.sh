@@ -40,7 +40,16 @@ CREATE TABLE consults(
 	best_language TEXT DEFAULT '0',
 	dysarthria TEXT DEFAULT '0',
 	extinction_inattention TEXT DEFAULT '0',
+	chief_complaint TEXT,
+	history TEXT,
+	last_known_normal TEXT,
+	impression TEXT,
 	open TEXT DEFAULT 'true'
+);
+
+CREATE TABLE users(
+	username TEXT PRIMARY KEY NOT NULL ,
+	password_hash TEXT NOT NULL
 );
 
 INSERT INTO consults (consult_type, patient_location, first_name, last_name, date_of_birth, gender, facility, referring_provider, call_back_phone, camera_name, notes, open) VALUES ('asl1', 'ip', 'Gabe', 'Scott', '04/22/1998', 'm', 'Facility 1', 'Other Provider', '720-840-7465', 'Camera 1', 'Gabe has had history with being cool.', 'true');
